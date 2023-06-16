@@ -65,10 +65,38 @@
 
 const searchButton = document.querySelector(".search-button");
 searchButton.addEventListener("click", async function () {
-  const inputKeyword = document.querySelector(".input-keyword");
-  const movies = await getMovies(inputKeyword.value);
-  updateUI(movies);
+  try { 
+    const inputKeyword = document.querySelector(".input-keyword");
+    const movies = await getMovies(inputKeyword.value);
+    updateUI(movies);
+  } catch(err) {
+    const errorKeys = document.querySelector('.movie-container')
+    errorKeys.innerHTML = errorKey()
+  }
 });
+
+function getMovies(keyword) {
+  return fetch("http://www.omdbapi.com/?apikey=a61bdef6&s=" + keyword)
+    .then((response) => {
+      if(!response.ok) {
+        throw new Error(response.statusText)
+      }
+      return response.json()
+    })
+    .then((response) => {
+      if (response.Response === "False") {
+        throw new Error(response.Error)
+      }
+      return response.Search
+    });
+}
+
+function updateUI(movies) {
+  let cards = "";
+  movies.forEach((m) => (cards += showCards(m)));
+  const movieContainer = document.querySelector(".movie-container");
+  movieContainer.innerHTML = cards;
+}
 
 // ketika tombole button di klik
 document.addEventListener("click", async function (e) {
@@ -91,18 +119,6 @@ function updateUIDetail(m) {
   modalBody.innerHTML = movieDetail;
 }
 
-function getMovies(keyword) {
-  return fetch("http://www.omdbapi.com/?apikey=a61bdef6&s=" + keyword)
-    .then((response) => response.json())
-    .then((response) => response.Search);
-}
-
-function updateUI(movies) {
-  let cards = "";
-  movies.forEach((m) => (cards += showCards(m)));
-  const movieContainer = document.querySelector(".movie-container");
-  movieContainer.innerHTML = cards;
-}
 
 function showCards(m) {
   return `<div class="col-md-4 my-3">
@@ -134,4 +150,8 @@ function showMovieDetail(m) {
                     </div>
                 </div>
           </div>`;
+}
+
+function errorKey(m) {
+  return `<img src="img/foto.jpg" class="rounded mx-auto d-block w-50" alt="...">`
 }
